@@ -1,0 +1,27 @@
+services:
+  app:
+    container_name: ${APP_NAME}
+    image: jenkins/jenkins:lts
+    networks:
+      - "apps-proxy"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=app-proxy"
+
+      - "traefik.http.routers.${APP_NAME}.entrypoints=http"
+      - "traefik.http.routers.${APP_NAME}.rule=Host(`$APP_URL`)"
+      - "traefik.http.middlewares.${APP_NAME}-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.${APP_NAME}.middlewares=${APP_NAME}-https-redirect"
+      - "traefik.http.routers.${APP_NAME}-secure.entrypoints=https"
+      - "traefik.http.routers.${APP_NAME}-secure.rule=Host(`$APP_URL`)"
+      - "traefik.http.routers.${APP_NAME}-secure.tls=true"
+      - "traefik.http.routers.${APP_NAME}-secure.tls.certresolver=http"
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+    ports:
+      - 50000:50000
+    restart: always
+
+networks:
+  apps-proxy:
+    external: true
